@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Scoreboard</title>
+        <link rel="stylesheet" href="./styles.css">
+    </head>
+    <body>
+        <div id="container">
+            <div id="addInputs">
+                <form id="addDataForm">
+                    <input id="index" type="number" placeholder="index">
+                    <input id="p_rating" type="number" placeholder="rating">
+                    <input id="password" type="password" placeholder="password">
+                    <button type="submit">Submit</button>
+                </form>
+            </div>
+            <div id="wrapper">
+                <div id="top_wrapper">
+                    <select id="season_id"></select>
+                    <button id="create_season">+</button>
+                </div>
+                <table id="board"></table>
+                <button id="add">Add data</button>
+            </div>
+        </div>
+        <script src="./main.js"></script>
+    </body>
+</html>
