@@ -1,32 +1,33 @@
+/*
+  Note from Osalotioman: Sorry, my edits are not so clean,
+  there's a second branch in whcih I'm working on making
+  up for shortcomings in this version.
+*/
+
+var sip = "http://192.168.43.1:4000/backend/scoreboard.php";
+var d = [];
 const season = document.querySelector("#season_id");
 const addDataForm = document.querySelector("#addDataForm");
 const addInputs = document.querySelector("#addInputs");
 const board = document.querySelector("#board");
 const createSeasonButton = document.querySelector("#create_season")
-const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+const today = "2024-07-15";
+
 const boardInit = `
     <th>S/N</th>
     <th>Names</th>
     <th>Rating Sum</th>
 `;
-const passwordHashes = [
-    "bf9b5951c550f519c08a4515282f5dc69e0a9e55152d5d316570436b9fa101dc",
-    "f3afeceb39f6ca1c863d69ef2bfbb9296ff382694ee97687946667049eb29f34",
-    "aeebad4a796fcc2e15dc4c6061b45ed9b373f26adfc798ca7d2d8cc58182718e"
-];
+
 const addData = document.querySelector("#add");
 const seasonTemplate = () => {
-    const endDate = new Date();
-    endDate.setDate(endDate.getDate() + 7);
-    const date_end = endDate.toISOString().split('T')[0];
-
     return {
-        date_start: today,
-        date_end: date_end,
+        date_start: "2024-07-16",
+        date_end: "2024-07-15",
         values: [
             { name: "Osazuwa Emmanuel", rating: 0 },
             { name: "Ofurhie Ochuko", rating: 0 },
-            { name: "Ighalo Genesis", rating: 0 }
+            { name: "Ighalo Genesis", rating: 20 }
         ]
     };
 };
@@ -42,22 +43,13 @@ const rowTemplate = (serialNo, name, rating) => {
 const optionTemplate = (val) => {
     return `<option value=${val}>Season ${val+1}</option>`;
 };
-const database = [
-    seasonTemplate(),
-];
 
-function hashPassword(password) {
-    const enc = new TextEncoder();
-    const data = enc.encode(password);
-
-    return crypto.subtle.digest('SHA-256', data).then(hashBuffer => {
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        return hashHex;
-    }).catch(error => {
-        console.error('Error hashing password:', error);
-        throw error; // Re-throw the error to be handled by the caller if needed
-    });
+var database = d;
+$.post(sip, {e2: "retrieve"},function (data){
+    database = JSON.parse(data);
+});
+function server(info, type){
+  $.post(sip, {e1:database, e2: "store"},function (data){});
 }
 
 function getCurrentSeason() {
@@ -84,7 +76,8 @@ function add(id, rating) {
         return;
     }
     if (id >= 0 && id < database[seasonIndex].values.length) {
-        database[seasonIndex].values[id].rating += rating;
+        database[seasonIndex].values[id].rating = parseInt(database[seasonIndex].values[id].rating) + rating;
+        server(database, "store");
     } else {
         alert("Invalid ID");
     }
@@ -96,6 +89,7 @@ function createSeason() {
         season.value = `${database.length}`;
         database.push(seasonTemplate());
         loadSeason(`${database.length-1}`);
+        server(database, "store");
     } else {
         alert("There's an ongoing season");
     }
@@ -108,20 +102,12 @@ function addDataEventHandler(e) {
     const password = document.getElementById("password").value; // Assuming there's an input field with id="password"
 
     if (!isNaN(index) && !isNaN(rating)) {
-        hashPassword(password).then(hash => {
-            if (hash !== passwordHashes[index]) {
-                alert("Incorrect password");
-            } else {
-                add(index, rating);
-                document.getElementById("index").value = '';
-                document.getElementById("p_rating").value = '';
-                document.getElementById("password").value = '';
-                addInputs.style.display = "none";
-                loadSeason(season.value);
-            }
-        }).catch(error => {
-            alert("Some error occurred while hashing your password\n and it was totally your fault 😒");
-        });
+      add(index, rating);
+      document.getElementById("index").value = '';
+      document.getElementById("p_rating").value = '';
+      document.getElementById("password").value = '';
+      addInputs.style.display = "none";
+      loadSeason(season.value);
     } else {
         alert("Please enter valid data.");
     }
@@ -132,6 +118,7 @@ function main() {
     for (i=database.length-1; i >= 0; --i) {
         season.innerHTML += optionTemplate(i);
     }
+    
     loadSeason(database.length-1);
     season.addEventListener('change', (e) => loadSeason(e.target.value))
     addData.addEventListener('click', () => {
@@ -142,4 +129,4 @@ function main() {
     createSeasonButton.addEventListener('click', createSeason);
 }
 
-window.onload = main
+window.onload = setTimeout(main, 1500);
